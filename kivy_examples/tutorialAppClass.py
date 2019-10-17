@@ -9,19 +9,26 @@ from kivy.uix.boxlayout import BoxLayout
 
 class TutorialApp(App):
     def build(self):
-        b = BoxLayout()
-        t = TextInput(font_size=150)
+        b = BoxLayout(orientation='vertical')
+        t = TextInput(font_size=150,
+                        size_hint_y=None,
+                        height=200,
+                        text='default')
 
         f = FloatLayout()
         s = Scatter()
-        l = Label(text='Hello!',
+        l = Label(text='default',
                     font_size=150)
 
+        t.bind(text=l.setter('text')) # returns a function that sets the text of the label
 
+
+        # Widgets added first will be at the top of the screen
         f.add_widget(s)
         s.add_widget(l)
-        b.add_widget(f)
+
         b.add_widget(t)
+        b.add_widget(f)
         return b
 
 
