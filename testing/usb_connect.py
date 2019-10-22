@@ -3,12 +3,13 @@ Connect to flight controller over USB and get live sensor output
 '''
 
 from dronekit import connect
+import time
 # Connect to the Vehicle (in this case a UDP endpoint)
-vehicle = connect('com4', wait_ready=True, baud=57600)
+vehicle = connect('com6', wait_ready=False, baud=115200)
 
 #-- Read information from the autopilot:
 #- Version and attributes
-vehicle.wait_ready('autopilot version')
+vehicle.wait_ready(True, timeout=300)
 print('Autopilot version: %s' % vehicle.version)
 
 #- Read the attitude: roll, pitch, yaw
