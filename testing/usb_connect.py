@@ -30,13 +30,13 @@ def attitude_callback(self, attr_name, value):
     print(vehicle.attitude)
 
 print('')
-# print('Adding an attitude listener')
-# vehicle.add_attribute_listener('attitude', attitude_callback) #-- message type, callback function
-#
-# time.sleep(15)
-#
-# #--- Now we print the attitude from the callback for 15 seconds, then we remove the callback
-# vehicle.remove_attribute_listener('attitude', attitude_callback) #(.remove)
+print('Adding an attitude listener')
+vehicle.add_attribute_listener('attitude', attitude_callback) #-- message type, callback function
+
+time.sleep(15)
+
+#--- Now we print the attitude from the callback for 15 seconds, then we remove the callback
+vehicle.remove_attribute_listener('attitude', attitude_callback) #(.remove)
 
 while not vehicle.is_armable:
    print("waiting to be armable")
