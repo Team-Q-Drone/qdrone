@@ -26,7 +26,7 @@ def arm_and_takeoff(altitude):
       time.sleep(1)
 
    print("Arming motors")
-   vehicle.mode = VehicleMode("GUIDED")
+   vehicle.mode = VehicleMode("STABILIZE")
    vehicle.armed = True
 
    while not vehicle.armed: time.sleep(1)
@@ -96,43 +96,3 @@ root = tk.Tk()
 print(">> Control the drone with the arrow keys. Press r for RTL mode")
 root.bind_all('<Key>', key)
 root.mainloop()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 

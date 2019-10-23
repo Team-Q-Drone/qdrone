@@ -2,10 +2,12 @@
 Connect to flight controller over USB and get live sensor output
 '''
 
-from dronekit import connect
+from dronekit import connect, VehicleMode
 import time
 # Connect to the Vehicle (in this case a UDP endpoint)
-vehicle = connect('com6', wait_ready=False, baud=115200)
+vehicle = connect('com5', wait_ready=False, baud=115200)
+
+vehicle.parameters['ARMING_CHECK']=0
 
 #-- Read information from the autopilot:
 #- Version and attributes
@@ -28,15 +30,23 @@ def attitude_callback(self, attr_name, value):
     print(vehicle.attitude)
 
 print('')
-print('Adding an attitude listener')
-vehicle.add_attribute_listener('attitude', attitude_callback) #-- message type, callback function
+# print('Adding an attitude listener')
+# vehicle.add_attribute_listener('attitude', attitude_callback) #-- message type, callback function
+#
+# time.sleep(15)
+#
+# #--- Now we print the attitude from the callback for 15 seconds, then we remove the callback
+# vehicle.remove_attribute_listener('attitude', attitude_callback) #(.remove)
 
-time.sleep(15)
+while not vehicle.is_armable:
+   print("waiting to be armable")
+   time.sleep(1)
 
-#--- Now we print the attitude from the callback for 15 seconds, then we remove the callback
-vehicle.remove_attribute_listener('attitude', attitude_callback) #(.remove)
+print("Arming motors")
+vehicle.mode = VehicleMode("STABILIZE")
+vehicle.armed = True
 
-
+while not vehicle.armed: time.sleep(1)
 #--- You can create a callback even with decorators, check the documentation out for more details
 
 
