@@ -16,7 +16,7 @@ print('Connecting...')
 vehicle = connect('udp:127.0.0.1:14551')
 
 #-- Setup the commanded flying speed
-gnd_speed = 5 # [m/s]
+gnd_speed = 0.5 # [m/s]
 
 #-- Define arm and takeoff
 def arm_and_takeoff(altitude):
@@ -72,9 +72,12 @@ def set_velocity_body(vehicle, vx, vy, vz):
 #-- Key event function
 def key(event):
     if event.char == event.keysym: #-- standard keys
-        if event.keysym == 'r':
-            print("r pressed >> Set the vehicle to RTL")
-            vehicle.mode = VehicleMode("RTL")
+        # if event.keysym == 'r':
+        #     print("r pressed >> Set the vehicle to RTL")
+        #     vehicle.mode = VehicleMode("RTL")
+        if event.keysym == 'l':
+            print('l pressed >> Land the vehicle')
+            vehicle.mode = VehicleMode('LAND')
 
     else: #-- non standard keys
         if event.keysym == 'Up':
@@ -89,10 +92,11 @@ def key(event):
 
 #---- MAIN FUNCTION
 #- Takeoff
-arm_and_takeoff(10)
+arm_and_takeoff(1)
 
 #- Read the keyboard with tkinter
 root = tk.Tk()
-print(">> Control the drone with the arrow keys. Press r for RTL mode")
+# print(">> Control the drone with the arrow keys. Press r for RTL mode")
+print('>> Control the drone with the arrow keys. Press l to land')
 root.bind_all('<Key>', key)
 root.mainloop()
