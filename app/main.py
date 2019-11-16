@@ -301,15 +301,21 @@ class Joystick(Widget):
 #============================= Build main app ==================================
 class QdroneApp(App):
     def build(self):
-        self.root = BoxLayout()
+        # return Joystick()
+        self.root = BoxLayout(orientation='horizontal')
         self.root.padding = 50
-        joystick = Joystick()
-        joystick.bind(pad=self.update_coordinates)
-        self.root.add_widget(joystick)
+        # self.root.add_widget(BoxLayout(orientation='horizontal'))
+        joystick1 = Joystick()
+        joystick2 = Joystick()
+        joystick1.bind(pad=self.update_coordinates)
+        self.root.add_widget(joystick1)
         self.label1 = Label()
         self.root.add_widget(self.label1)
         self.label2 = Label()
         self.root.add_widget(self.label2)
+        # self.root.add_widget(BoxLayout(orientation='horizontal'))
+        joystick2.bind(pad=self.update_coordinates)
+        self.root.add_widget(joystick2)
 
 
 
@@ -378,4 +384,5 @@ class QdroneApp(App):
 
 
 if __name__ == '__main__':
-    QdroneApp().run()
+    app = QdroneApp()
+    app.run()

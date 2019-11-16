@@ -18,7 +18,7 @@
             circle: (self.center_x, self.center_y, (self._diameter - (self._line_width * 2)) / 2)
             width: self._line_width
 
-<JoyStick>:
+<Joystick>:
     canvas:
 
         ###  Outer Background  ###
@@ -53,24 +53,21 @@
     JoystickPad:
         id: pad
 
-
-BoxLayout:
-    orientation: 'horizontal'
-
-    Joystick:
-        sticky: False
-        outer_size: 1
-        inner_size: 0.75
-        pad_size:   0.5
-        outer_line_width: 0.01
-        inner_line_width: 0.01
-        pad_line_width:   0.01
-        outer_background_color: (0.75, 0.75, 0.75, 0.3)
-        outer_line_color:       (0.25, 0.25, 0.25, 0.3)
-        inner_background_color: (0.75, 0.75, 0.75, 0.1)
-        inner_line_color:       (0.7,  0.7,  0.7,  0.1)
-        pad_background_color:   (0.4,  0.4,  0.4,  0.3)
-        pad_line_color:         (0.35, 0.35, 0.35, 0.3)
+#
+# Joystick:
+#     sticky: False
+#     outer_size: 1
+#     inner_size: 0.75
+#     pad_size:   0.5
+#     outer_line_width: 0.01
+#     inner_line_width: 0.01
+#     pad_line_width:   0.01
+#     outer_background_color: (0.25, 0.75, 0.75, 0.3)
+#     outer_line_color:       (0.25, 0.25, 0.25, 0.3)
+#     inner_background_color: (0.75, 0.75, 0.75, 0.1)
+#     inner_line_color:       (0.7,  0.7,  0.7,  0.1)
+#     pad_background_color:   (0.4,  0.4,  0.4,  0.3)
+#     pad_line_color:         (0.35, 0.35, 0.35, 0.3)
 
 
 
