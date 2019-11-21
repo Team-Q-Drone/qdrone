@@ -9,7 +9,8 @@ import Tkinter as tk
 
 
 # Connect to the Vehicle (in this case a UDP endpoint)
-vehicle = connect('com5', wait_ready=False, baud=115200)
+# vehicle = connect('com5', wait_ready=False, baud=115200)
+vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
 
 vehicle.parameters['ARMING_CHECK']=0
 
