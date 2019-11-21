@@ -119,6 +119,22 @@ def rc_land(vehicle):
     # Land automatically
     vehicle.mode = VehicleMode('LAND')
 
+def run_calibrations(vehicle):
+    print('Calibrating accelerometers...')
+    vehicle.send_calibrate_accelerometer(simple=True)
+    # time.sleep(1)
+
+    print('Requesting barometer calibration...')
+    vehicle.send_calibrate_barometer()
+    # time.sleep(1)
+
+    print('Requesting gyroscope calibration...')
+    vehicle.send_calibrate_gyro()
+
+    print('Requesting vehicle level calibration...')
+    vehicle.send_calibrate_vehicle_level()
+
+
 # def rc_vary_throttle():  # This doesn't work as intended
 #     idle_throttle = 1500
 #     throttle = idle_throttle
@@ -147,71 +163,74 @@ def rc_land(vehicle):
 #########################
 ####### MAIN CODE #######
 #########################
+if __name__ == "__main__":
+    # Connect to the Vehicle (in this case a UDP endpoint)
+    # vehicle = connect('com5', wait_ready=False, baud=115200)
+    print('Connecting...')
+    vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
 
-# Connect to the Vehicle (in this case a UDP endpoint)
-# vehicle = connect('com5', wait_ready=False, baud=115200)
-print('Connecting...')
-vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
-
-vehicle.parameters['ARMING_CHECK']=0
-
-#-- Read information from the autopilot:
-#- Version and attributes
-vehicle.wait_ready(True, timeout=300)
-print('Autopilot version: %s' % vehicle.version)
-
-#- Read the attitude: roll, pitch, yaw
-print('Attitude: %s' % vehicle.attitude)
-
-#- When did we receive the last heartbeat
-print('Last Heartbeat: %s' % vehicle.last_heartbeat)
+    vehicle.parameters['ARMING_CHECK']=0
 
 
-##### Flight testing #####
-rc_arm_and_takeoff(vehicle,2.0)
-vehicle.VehicleMode('ALT_HOLD')
-time.sleep(2)
+    #-- Read information from the autopilot:
+    #- Version and attributes
+    vehicle.wait_ready(True, timeout=300)
+    print('Autopilot version: %s' % vehicle.version)
 
-# Roll right
-timeout = 2   # [seconds]
-timeout_start = time.time()
-while time.time() < timeout_start + timeout:
-    rc_roll(vehicle,0.2)
+    #- Read the attitude: roll, pitch, yaw
+    print('Attitude: %s' % vehicle.attitude)
 
-# Roll left
-timeout_start = time.time()
-while time.time() < timeout_start + timeout:
-    rc_roll(vehicle,-0.2)
+    #- When did we receive the last heartbeat
+    print('Last Heartbeat: %s' % vehicle.last_heartbeat)
 
-# Pitch forward
-timeout_start = time.time()
-while time.time() < timeout_start + timeout:
-    rc_pitch(vehicle,0.2)
+    run_calibrations(vehicle)
+    time.sleep(2)
 
-# Pitch backward
-timeout_start = time.time()
-while time.time() < timeout_start + timeout:
-    rc_pitch(vehicle,-0.2)
+    ##### Flight testing #####
+    rc_arm_and_takeoff(vehicle,2.0)
+    vehicle.VehicleMode('ALT_HOLD')
+    time.sleep(2)
 
-# Yaw right
-timeout_start = time.time()
-while time.time() < timeout_start + timeout:
-    rc_yaw(vehicle,0.2)
+    # Roll right
+    timeout = 2   # [seconds]
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        rc_roll(vehicle,0.2)
 
-# Yaw left
-timeout_start = time.time()
-while time.time() < timeout_start + timeout:
-    rc_yaw(vehicle,-0.2)
+    # Roll left
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        rc_roll(vehicle,-0.2)
 
-rc_land()
-time.sleep(5)
+    # Pitch forward
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        rc_pitch(vehicle,0.2)
+
+    # Pitch backward
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        rc_pitch(vehicle,-0.2)
+
+    # Yaw right
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        rc_yaw(vehicle,0.2)
+
+    # Yaw left
+    timeout_start = time.time()
+    while time.time() < timeout_start + timeout:
+        rc_yaw(vehicle,-0.2)
+
+    rc_land()
+    time.sleep(5)
 
 
 
-print("Clear all overrides")
-vehicle.channels.overrides = {}
-print(" Channel overrides: %s" % vehicle.channels.overrides)
+    print("Clear all overrides")
+    vehicle.channels.overrides = {}
+    print(" Channel overrides: %s" % vehicle.channels.overrides)
 
 
-vehicle.close()
-print('done')
+    vehicle.close()
+    print('done')
