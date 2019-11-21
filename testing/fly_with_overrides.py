@@ -168,6 +168,7 @@ def rc_land(self):
 
 # Flight testing
 rc_arm_and_takeoff()
+vehicle.VehicleMode('ALT_HOLD')
 time.sleep(2)
 
 # Roll right
@@ -200,8 +201,6 @@ while time.time() < timeout_start + timeout:
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
     rc_yaw(-0.2)
-
-
 
 rc_land()
 time.sleep(5)
