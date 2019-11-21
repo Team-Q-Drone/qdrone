@@ -7,23 +7,6 @@ import time
 
 import Tkinter as tk
 
-# Connect to the Vehicle (in this case a UDP endpoint)
-# vehicle = connect('com5', wait_ready=False, baud=115200)
-print('Connecting...')
-vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
-
-vehicle.parameters['ARMING_CHECK']=0
-
-#-- Read information from the autopilot:
-#- Version and attributes
-vehicle.wait_ready(True, timeout=300)
-print('Autopilot version: %s' % vehicle.version)
-
-#- Read the attitude: roll, pitch, yaw
-print('Attitude: %s' % vehicle.attitude)
-
-#- When did we receive the last heartbeat
-print('Last Heartbeat: %s' % vehicle.last_heartbeat)
 
 
 
@@ -69,7 +52,7 @@ def getJoystickUpdates(mapping):
 ##### Scripted command functions #####
 ######################################
 
-def rc_arm_and_takeoff(self):
+def rc_arm_and_takeoff(vehicle,desired_alt):
     # Take off in STABILIZE and reach a desired alt, then leave throttle on idle
     while not vehicle.is_armable:
         print("waiting to be armable")
@@ -91,7 +74,7 @@ def rc_arm_and_takeoff(self):
 
         vehicle.mode = VehicleMode("STABILIZE")
         #desired_alt = 10 # meters
-        desired_alt = input("Enter a desired altitude (m): ")
+        # desired_alt = input("Enter a desired altitude (m): ")
         initial_alt = vehicle.location.global_relative_frame.alt
         print("Taking off to desired altitude: %s" % desired_alt)
         try:
@@ -111,28 +94,28 @@ def rc_arm_and_takeoff(self):
     # return initial_alt
 
 
-def rc_roll(self,rollval):
+def rc_roll(vehicle,rollval):
     # Input a roll value from -1 to 1
     roll = map2pwm(rollval)
     vehicle.channels.overrides[1] = roll
 
-def rc_pitch(self,pitchval):
+def rc_pitch(vehicle,pitchval):
     # Input a roll value from -1 to 1
     pitch = map2pwm(pitchval)
     vehicle.channels.overrides[2] = pitch
 
-def rc_throttle(self,throttleval):
+def rc_throttle(vehicle,throttleval):
     # Input a roll value from -1 to 1
     throttle = map2pwm(throttleval)
     vehicle.channels.overrides[3] = throttle
 
-def rc_yaw(self,yawval):
+def rc_yaw(vehicle,yawval):
     # Input a roll value from -1 to 1
     yaw = map2pwm(yawval)
     vehicle.channels.overrides[4] = yaw
 
 
-def rc_land(self):
+def rc_land(vehicle):
     # Land automatically
     vehicle.mode = VehicleMode('LAND')
 
@@ -165,9 +148,27 @@ def rc_land(self):
 ####### MAIN CODE #######
 #########################
 
+# Connect to the Vehicle (in this case a UDP endpoint)
+# vehicle = connect('com5', wait_ready=False, baud=115200)
+print('Connecting...')
+vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
 
-# Flight testing
-rc_arm_and_takeoff()
+vehicle.parameters['ARMING_CHECK']=0
+
+#-- Read information from the autopilot:
+#- Version and attributes
+vehicle.wait_ready(True, timeout=300)
+print('Autopilot version: %s' % vehicle.version)
+
+#- Read the attitude: roll, pitch, yaw
+print('Attitude: %s' % vehicle.attitude)
+
+#- When did we receive the last heartbeat
+print('Last Heartbeat: %s' % vehicle.last_heartbeat)
+
+
+##### Flight testing #####
+rc_arm_and_takeoff(vehicle,2.0)
 vehicle.VehicleMode('ALT_HOLD')
 time.sleep(2)
 
@@ -175,37 +176,35 @@ time.sleep(2)
 timeout = 2   # [seconds]
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
-    rc_roll(0.2)
+    rc_roll(vehicle,0.2)
 
 # Roll left
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
-    rc_roll(-0.2)
+    rc_roll(vehicle,-0.2)
 
 # Pitch forward
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
-    rc_pitch(0.2)
+    rc_pitch(vehicle,0.2)
 
 # Pitch backward
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
-    rc_pitch(-0.2)
+    rc_pitch(vehicle,-0.2)
 
 # Yaw right
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
-    rc_yaw(0.2)
+    rc_yaw(vehicle,0.2)
 
 # Yaw left
 timeout_start = time.time()
 while time.time() < timeout_start + timeout:
-    rc_yaw(-0.2)
+    rc_yaw(vehicle,-0.2)
 
 rc_land()
 time.sleep(5)
-
-
 
 
 
