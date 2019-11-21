@@ -6,7 +6,8 @@ from dronekit import connect, VehicleMode
 import time
 # Connect to the Vehicle (in this case a UDP endpoint)
 # vehicle = connect('tcp:192.168.4.2:139', wait_ready=True, baud=115200)
-vehicle = connect('192.168.4.2:137', wait_ready=False, baud=57600)
+vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
+# vehicle = connect('127.0.0.1:14550', wait_ready=False, baud=115200)
 # vehicle = connect('com5', wait_ready=False, baud=115200)
 
 vehicle.parameters['ARMING_CHECK']=0
@@ -61,6 +62,8 @@ timer = 0
 while timer <= 10:
     vehicle.channels.overrides[3] = 1000
     print " Ch3 override: %s" % vehicle.channels.overrides[3]
+    time.sleep(0.5)
+    timer += 0.5
 
     # if vehicle.location.global_relative_frame.alt >= 140:
     #     print('Reached target altitude: {0:.2f}m'.format(vehicle.location.global_relative_frame.alt))
