@@ -1,0 +1,3 @@
+title=test app
+author=Danni
+orientation=landscape

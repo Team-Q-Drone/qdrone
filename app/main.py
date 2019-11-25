@@ -1,15 +1,34 @@
+'''
+Application built from a  .kv file
+==================================
+
+This shows how to implicitly use a .kv file for your application. You
+should see a full screen button labelled "Hello from test.kv".
+
+After Kivy instantiates a subclass of App, it implicitly searches for a .kv
+file. The file test.kv is selected because the name of the subclass of App is
+TestApp, which implies that kivy should try to load "test.kv". That file
+contains a root Widget.
+'''
+
+import kivy
+kivy.require('1.0.7')
+
 from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 from kivy.properties import (
     NumericProperty, ReferenceListProperty, ObjectProperty, ListProperty,
     BooleanProperty
 )
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.vector import Vector
 from kivy.clock import Clock
 import math
 import numpy as np
+from kivy.uix.slider import Slider
+from kivy.uix.button import Button
 # from joystick import Joystick
 # from kivy.uix.floatlayout import FloatLayout
 # from random import randint
@@ -87,14 +106,14 @@ class Joystick(Widget):
         The smallest value of widget.width & widget.height
            is used as a baseline for these percentages.'''
 
-    outer_background_color = ListProperty([0.75, 0.75, 0.75, 1])
-    inner_background_color = ListProperty([0.75, 0.75, 0.75, 0.5])
-    pad_background_color = ListProperty([0.4, 0.4, 0.4, 0.5])
+    outer_background_color = ListProperty([0, 0, 0.75, 1])
+    inner_background_color = ListProperty([0, 0, 0.75, 0.5])
+    pad_background_color = ListProperty([0, 0, 0.4, 0.5])
     '''Background colors for the joystick base & pad'''
 
-    outer_line_color = ListProperty([0.25, 0.25, 0.25, 1])
-    inner_line_color = ListProperty([0.7, 0.7, 0.7, 1])
-    pad_line_color = ListProperty([0.35, 0.35, 0.35, 1])
+    outer_line_color = ListProperty([0, 0, 0.25, 1])
+    inner_line_color = ListProperty([0, 0, 0.7, 1])
+    pad_line_color = ListProperty([0, 0, 0.35, 1])
     '''Border colors for the joystick base & pad'''
 
     outer_line_width = NumericProperty(0.01)
@@ -295,15 +314,16 @@ class Joystick(Widget):
         return 'joystick' in touch.ud and touch.ud['joystick'] == self
 
 
-
-
-
-#============================= Build main app ==================================
-class QdroneApp(App):
+class TestApp(App):
     def build(self):
         # return Joystick()
-        self.root = BoxLayout(orientation='horizontal')
+        self.root = GridLayout(cols=4)
         self.root.padding = 50
+        slider = Slider(min=0, max=90, value=45, orientation='horizontal')
+        self.root.add_widget(slider)
+        self.root.add_widget(Button(text='Arm'))
+        self.root.add_widget(Button(text='Take Off'))
+        self.root.add_widget(Button(text='Land'))
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         joystick1 = Joystick()
         joystick2 = Joystick()
@@ -316,7 +336,6 @@ class QdroneApp(App):
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         joystick2.bind(pad=self.update_coordinates)
         self.root.add_widget(joystick2)
-
 
 
     def update_coordinates(self, joystick, pad):
@@ -347,42 +366,8 @@ class QdroneApp(App):
             self.label2.text = 'ERROR'
 
 
-
-
-
-
-
-    # Following code is exactly from JoystickDemo.py and may not run as expected
-    # def build(self):
-    #     self.root = Qdrone()
-    #     self._bind_joysticks()
-    #
-    # def _bind_joysticks(self):
-    #   joysticks = self._get_joysticks(self.root)
-    #   for joystick in joysticks:
-    #     joystick.bind(pad=self._update_pad_display)
-    #
-    # def _get_joysticks(self, parent):
-    #   joysticks = []
-    #   if isinstance(parent, Joystick):
-    #     joysticks.append(parent)
-    #   elif hasattr(parent, 'children'):
-    #     for child in parent.children:
-    #       joysticks.extend(self._get_joysticks(child))
-    #   return joysticks
-    #
-    # def _update_pad_display(self, instance, pad):
-    #   x, y = pad
-    #   x, y = (str(x)[0:5], str(y)[0:5])
-    #   x, y = (('x: ' + x), ('\ny: ' + y))
-    #   r = "radians: " + str(instance.radians)[0:5]
-    #   m = "\nmagnitude: " + str(instance.magnitude)[0:5]
-    #   a = "\nangle: " + str(instance.angle)[0:5]
-    #   self.root.ids.pad_display_xy.text = "".join([x, y])
-    #   self.root.ids.pad_display_rma.text = "".join([r, m, a])
-
+    
 
 
 if __name__ == '__main__':
-    app = QdroneApp()
-    app.run()
+    TestApp().run()
