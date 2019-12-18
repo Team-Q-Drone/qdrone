@@ -324,12 +324,21 @@ class TestApp(App):
         self.root.padding = 50
         slider = Slider(min=0, max=90, value=45, orientation='horizontal')
         self.root.add_widget(slider)
+
         armbutton = Button(text='Connect')
         armbutton.bind(on_press = self.connect_callback)
         self.root.add_widget(armbutton)
-        # self.root.add_widget(Button(text='Arm'))
-        self.root.add_widget(Button(text='Take Off'))
-        self.root.add_widget(Button(text='Land'))
+
+        takeoffbutton = Button(text='Arm and Take Off')
+        takeoffbutton.bind(on_press = self.arm_and_takeoff_callback)
+        self.root.add_widget(takeoffbutton)
+        # self.root.add_widget(Button(text='Take Off'))
+
+        landbutton = Button(text='Land')
+        landbutton.bind(on_press = self.land_callback)
+        self.root.add_widget(landbutton)
+        # self.root.add_widget(Button(text='Land'))
+
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         throttle_joystick = Joystick()
         movement_joystick = Joystick()
@@ -343,6 +352,32 @@ class TestApp(App):
         movement_joystick.bind(pad=self.update_coordinates)
         self.root.add_widget(movement_joystick)
 
+    
+
+    def map2pwm(x):
+        maxpwm = 1900
+        minpwm = 1100
+        return int( (x - -1) * (maxpwm - minpwm) / (1 - -1) + minpwm)
+
+    def rc_roll(vehicle,rollval):
+        # Input a roll value from -1 to 1
+        roll = map2pwm(rollval)
+        vehicle.channels.overrides[1] = roll
+
+    def rc_pitch(vehicle,pitchval):
+        # Input a roll value from -1 to 1
+        pitch = map2pwm(pitchval)
+        vehicle.channels.overrides[2] = pitch
+
+    def rc_throttle(vehicle,throttleval):
+        # Input a roll value from -1 to 1
+        throttle = map2pwm(throttleval)
+        vehicle.channels.overrides[3] = throttle
+
+    def rc_yaw(vehicle,yawval):
+        # Input a roll value from -1 to 1
+        yaw = map2pwm(yawval)
+        vehicle.channels.overrides[4] = yaw
 
     def connect_callback(self,event):
         print('Connect button pressed')
@@ -364,6 +399,54 @@ class TestApp(App):
         print('Last Heartbeat: %s' % vehicle.last_heartbeat)
 
 
+    def arm_and_takeoff_callback(self, event):
+        # Take off in STABILIZE and reach a desired alt, then leave throttle on idle
+        while not vehicle.is_armable:
+            print("waiting to be armable")
+            time.sleep(1)
+
+            # Set vehicle mode
+        desired_mode = 'STABILIZE'
+        while vehicle.mode != desired_mode:
+            vehicle.mode = dronekit.VehicleMode(desired_mode)
+            time.sleep(0.5)
+
+        while not vehicle.armed:
+            print("Arming motors")
+            vehicle.armed = True
+            time.sleep(0.5)
+
+        # First check to see if the vehicle is actuallly armed:
+        if vehicle.armed == True:
+
+            vehicle.mode = VehicleMode("ALT_HOLD")
+            #desired_alt = 10 # meters
+            # desired_alt = input("Enter a desired altitude (m): ")
+            initial_alt = vehicle.location.global_relative_frame.alt
+            climb_throttle = 0.75
+            idle_throttle = 0.45
+            print("Taking off to desired altitude: %s" % desired_alt)
+            try:
+                while (vehicle.location.global_relative_frame.alt <= desired_alt):
+                    print("Vehicle Altitude: %s" % vehicle.location.global_relative_frame.alt)
+                    vehicle.channels.overrides[3] = map2pwm(climb_throttle)
+                print('ALTITUDE ACHIEVED. Going to idle throttle.')
+                vehicle.channels.overrides[3] = map2pwm(idle_throttle) # Idle throttle
+                print("Takeoff Complete")
+            except KeyboardInterrupt:
+                print('Takeoff failed...Turning off motors...')
+                vehicle.channels.overrides[3] = []
+                vehicle.close()
+
+        else:
+            print("Please Arm the vehicle and try again")
+
+
+    def land_callback(self, event):
+        if vehicle.armed == True:
+            vehicle.mode = VehicleMode('LAND')
+        else:
+            print('Can''t land if you''re not in the air')
 
     # callback function tells when arm button is pressed and executes arming action
     def arm_callback(self, event):
