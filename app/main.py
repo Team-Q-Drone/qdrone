@@ -32,6 +32,7 @@ from dronekit import connect, VehicleMode
 import time
 from kivy.uix.slider import Slider
 from kivy.uix.button import Button
+from kivy.uix.image import Image
 # from joystick import Joystick
 # from kivy.uix.floatlayout import FloatLayout
 # from random import randint
@@ -322,8 +323,12 @@ class TestApp(App):
         # return Joystick()
         self.root = GridLayout(cols=4)
         self.root.padding = 50
-        slider = Slider(min=0, max=90, value=45, orientation='horizontal')
-        self.root.add_widget(slider)
+
+        # slider = Slider(min=0, max=90, value=45, orientation='horizontal')
+        # self.root.add_widget(slider)
+
+        logo = Image(source = 'qlogo.png')
+        self.root.add_widget(logo)
 
         armbutton = Button(text='Connect')
         armbutton.bind(on_press = self.connect_callback)
@@ -342,17 +347,57 @@ class TestApp(App):
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         throttle_joystick = Joystick()
         movement_joystick = Joystick()
-        throttle_joystick.bind(pad=self.update_coordinates)
+        throttle_joystick.bind(pad=self.simple_update_throttle_stick)
         self.root.add_widget(throttle_joystick)
         self.label1 = Label()
         self.root.add_widget(self.label1)
         self.label2 = Label()
         self.root.add_widget(self.label2)
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
-        movement_joystick.bind(pad=self.update_coordinates)
+        movement_joystick.bind(pad=self.update_movement_stick)
         self.root.add_widget(movement_joystick)
 
-    
+
+    def update_movement_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        self.label1.text = text.format(x, y, radians, magnitude, angle)
+        pitch_level = np.sin(joystick.angle)*joystick.magnitude
+        roll_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_pitch(vehicle,pitch_level)
+        rc_roll(vehicle,roll_level)
+
+
+    def update_throttle_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        # self.label1.text = text.format(x, y, radians, magnitude, angle)
+        throttle_level = np.sin(joystick.angle)*joystick.magnitude
+        yaw_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_throttle(vehicle,throttle_level)
+        rc_yaw(vehicle,yaw_level)
+
+
+    def simple_update_throttle_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        # self.label1.text = text.format(x, y, radians, magnitude, angle)
+        throttle_level = np.sin(joystick.angle)*joystick.magnitude
+        # yaw_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_throttle(vehicle,throttle_level)
+        # rc_yaw(vehicle,yaw_level)
 
     def map2pwm(x):
         maxpwm = 1900
