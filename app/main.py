@@ -324,20 +324,26 @@ class TestApp(App):
         self.root = GridLayout(cols=4)
         self.root.padding = 50
 
-        # slider = Slider(min=0, max=90, value=45, orientation='horizontal')
-        # self.root.add_widget(slider)
+        slider = Slider(min=0, max=90, value=45, orientation='horizontal')
+        self.root.add_widget(slider)
 
-        logo = Image(source = 'qlogo.png')
-        self.root.add_widget(logo)
+        # logo = Image(source = 'qlogo.png')
+        # self.root.add_widget(logo)
 
-        armbutton = Button(text='Connect')
-        armbutton.bind(on_press = self.connect_callback)
+        connectbutton = Button(text='Connect')
+        connectbutton.bind(on_press = self.connect_callback)
+        self.root.add_widget(connectbutton)
+
+        armbutton = Button(text='Arm')
+        armbutton.bind(on_press = self.arm_callback)
         self.root.add_widget(armbutton)
 
-        takeoffbutton = Button(text='Arm and Take Off')
-        takeoffbutton.bind(on_press = self.arm_and_takeoff_callback)
-        self.root.add_widget(takeoffbutton)
-        # self.root.add_widget(Button(text='Take Off'))
+
+
+        # takeoffbutton = Button(text='Arm and Take Off')
+        # takeoffbutton.bind(on_press = self.arm_and_takeoff_callback)
+        # self.root.add_widget(takeoffbutton)
+
 
         landbutton = Button(text='Land')
         landbutton.bind(on_press = self.land_callback)
