@@ -27,6 +27,9 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 import math
 import numpy as np
+import dronekit
+from dronekit import connect, VehicleMode
+import time
 from kivy.uix.slider import Slider
 from kivy.uix.button import Button
 # from joystick import Joystick
@@ -321,23 +324,65 @@ class TestApp(App):
         self.root.padding = 50
         slider = Slider(min=0, max=90, value=45, orientation='horizontal')
         self.root.add_widget(slider)
-        armbutton = Button(text='Arm')
+        armbutton = Button(text='Connect')
+        armbutton.bind(on_press = self.connect_callback)
         self.root.add_widget(armbutton)
         # self.root.add_widget(Button(text='Arm'))
         self.root.add_widget(Button(text='Take Off'))
         self.root.add_widget(Button(text='Land'))
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
-        joystick1 = Joystick()
-        joystick2 = Joystick()
-        joystick1.bind(pad=self.update_coordinates)
-        self.root.add_widget(joystick1)
+        throttle_joystick = Joystick()
+        movement_joystick = Joystick()
+        throttle_joystick.bind(pad=self.update_coordinates)
+        self.root.add_widget(throttle_joystick)
         self.label1 = Label()
         self.root.add_widget(self.label1)
         self.label2 = Label()
         self.root.add_widget(self.label2)
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
-        joystick2.bind(pad=self.update_coordinates)
-        self.root.add_widget(joystick2)
+        movement_joystick.bind(pad=self.update_coordinates)
+        self.root.add_widget(movement_joystick)
+
+
+    def connect_callback(self,event):
+        print('Connect button pressed')
+
+        print('Connecting...')
+        vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
+
+        vehicle.parameters['ARMING_CHECK']=0
+
+        #-- Read information from the autopilot:
+        #- Version and attributes
+        vehicle.wait_ready(True, timeout=300)
+        print('Autopilot version: %s' % vehicle.version)
+
+        #- Read the attitude: roll, pitch, yaw
+        print('Attitude: %s' % vehicle.attitude)
+
+        #- When did we receive the last heartbeat
+        print('Last Heartbeat: %s' % vehicle.last_heartbeat)
+
+
+
+    # callback function tells when arm button is pressed and executes arming action
+    def arm_callback(self, event):
+        print("Arm button pressed")
+
+        while not vehicle.is_armable:
+            print("waiting to be armable")
+            time.sleep(1)
+
+        # Set vehicle mode
+        desired_mode = 'STABILIZE'
+        while vehicle.mode != desired_mode:
+            vehicle.mode = dronekit.VehicleMode(desired_mode)
+            time.sleep(0.5)
+
+        while not vehicle.armed:
+            print("Arming motors")
+            vehicle.armed = True
+            time.sleep(0.5)
 
 
     def update_coordinates(self, joystick, pad):
