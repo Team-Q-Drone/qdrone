@@ -321,7 +321,9 @@ class TestApp(App):
         self.root.padding = 50
         slider = Slider(min=0, max=90, value=45, orientation='horizontal')
         self.root.add_widget(slider)
-        self.root.add_widget(Button(text='Arm'))
+        armbutton = Button(text='Arm')
+        self.root.add_widget(armbutton)
+        # self.root.add_widget(Button(text='Arm'))
         self.root.add_widget(Button(text='Take Off'))
         self.root.add_widget(Button(text='Land'))
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
@@ -366,7 +368,7 @@ class TestApp(App):
             self.label2.text = 'ERROR'
 
 
-    
+
 
 
 if __name__ == '__main__':
