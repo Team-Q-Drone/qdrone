@@ -197,6 +197,8 @@ if __name__ == "__main__":
     print('Connecting...')
     vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
 
+    time.sleep(5)
+
     vehicle.parameters['ARMING_CHECK']=0
 
 
@@ -222,10 +224,10 @@ if __name__ == "__main__":
 
 
     # Arm and take off
-    rc_arm_and_takeoff(vehicle,0.75)
+    rc_arm_and_takeoff(vehicle,1.0)
     vehicle.mode = VehicleMode("ALT_HOLD")
     # vehicle.VehicleMode('ALT_HOLD')
-    time.sleep(5)
+    time.sleep(8)
 
     timeout = 5   # [seconds]
 
@@ -249,11 +251,11 @@ if __name__ == "__main__":
     # while time.time() < timeout_start + timeout:
     #     rc_pitch(vehicle,-0.2)
     #
-    # Yaw right
-    timeout_start = time.time()
-    print('YAW!!!!!!!!!!!')
-    while time.time() < timeout_start + timeout:
-        rc_yaw(vehicle,1.0)
+    # # Yaw right
+    # timeout_start = time.time()
+    # print('YAW!!!!!!!!!!!')
+    # while time.time() < timeout_start + timeout:
+    #     rc_yaw(vehicle,1.0)
 
     # # Yaw left
     # timeout_start = time.time()
@@ -261,10 +263,10 @@ if __name__ == "__main__":
     # while time.time() < timeout_start + timeout:
     #     rc_yaw(vehicle,-0.5)
     # print('completing yaw')
-    quicktime = 0.5
-    timeout_start = time.time()
-    while time.time() < timeout_start + timeout:
-        rc_yaw(vehicle,0.0)
+    # quicktime = 0.5
+    # timeout_start = time.time()
+    # while time.time() < timeout_start + quicktime:
+    #     rc_yaw(vehicle,0.0)
 
     #
     # while not vehicle.is_armable:
@@ -294,7 +296,7 @@ if __name__ == "__main__":
     time.sleep(2)
 
     timeout_start = time.time()
-    while time.time() < timeout_start + timeout:
+    while time.time() < timeout_start + quicktime:
         rc_throttle(vehicle,0.0) # KILL THE MOTORS!
 
     print("Clear all overrides")

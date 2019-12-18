@@ -10,6 +10,9 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 import math
 import numpy as np
+import dronekit
+from dronekit import connect, VehicleMode
+import time
 # from joystick import Joystick
 # from kivy.uix.floatlayout import FloatLayout
 # from random import randint
@@ -307,17 +310,54 @@ class QdroneApp(App):
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         joystick1 = Joystick()
         joystick2 = Joystick()
-        joystick1.bind(pad=self.update_coordinates)
+        joystick1.bind(pad=self.update_throttle_stick)
         self.root.add_widget(joystick1)
-        self.label1 = Label()
-        self.root.add_widget(self.label1)
-        self.label2 = Label()
-        self.root.add_widget(self.label2)
+        # self.armbutton = Button()
+        # self.root.add_widget(self.armbutton)
+        # self.label1 = Label()
+        # self.root.add_widget(self.label1)
+        # self.label2 = Label()
+        # self.root.add_widget(self.label2)
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         joystick2.bind(pad=self.update_coordinates)
         self.root.add_widget(joystick2)
 
 
+
+    def update_throttle_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        self.label1.text = text.format(x, y, radians, magnitude, angle)
+        throttle_level = np.sin(joystick.angle)*joystick.magnitude
+        yaw_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_throttle(vehicle,throttle_level)
+        rc_yaw(vehicle,yaw_level)
+
+
+
+    def rc_roll(vehicle,rollval):
+        # Input a roll value from -1 to 1
+        roll = map2pwm(rollval)
+        vehicle.channels.overrides[1] = roll
+
+    def rc_pitch(vehicle,pitchval):
+        # Input a roll value from -1 to 1
+        pitch = map2pwm(pitchval)
+        vehicle.channels.overrides[2] = pitch
+
+    def rc_throttle(vehicle,throttleval):
+        # Input a roll value from -1 to 1
+        throttle = map2pwm(throttleval)
+        vehicle.channels.overrides[3] = throttle
+
+    def rc_yaw(vehicle,yawval):
+        # Input a roll value from -1 to 1
+        yaw = map2pwm(yawval)
+        vehicle.channels.overrides[4] = yaw
 
     def update_coordinates(self, joystick, pad):
         x = str(pad[0])[0:5]

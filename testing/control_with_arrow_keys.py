@@ -13,7 +13,8 @@ import Tkinter as tk
 
 #-- Connect to the vehicle
 print('Connecting...')
-vehicle = connect('udp:127.0.0.1:14551')
+vehicle = connect('tcp:192.168.4.1', wait_ready=True)
+# vehicle = connect('tcp:127.0.0.1:5760', wait_ready=True)
 # vehicle = connect('com5', wait_ready=False, baud=115200)
 
 vehicle.parameters['ARMING_CHECK']=0
@@ -29,7 +30,7 @@ def arm_and_takeoff(altitude):
       time.sleep(1)
 
    print("Arming motors")
-   vehicle.mode = VehicleMode("STABILIZE")
+   vehicle.mode = VehicleMode("GUIDED")
    vehicle.armed = True
 
    while not vehicle.armed: time.sleep(1)
