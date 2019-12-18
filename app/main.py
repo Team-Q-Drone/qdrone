@@ -27,8 +27,12 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 import math
 import numpy as np
+import dronekit
+from dronekit import connect, VehicleMode
+import time
 from kivy.uix.slider import Slider
 from kivy.uix.button import Button
+from kivy.uix.image import Image
 # from joystick import Joystick
 # from kivy.uix.floatlayout import FloatLayout
 # from random import randint
@@ -319,25 +323,194 @@ class TestApp(App):
         # return Joystick()
         self.root = GridLayout(cols=4)
         self.root.padding = 50
-        slider = Slider(min=0, max=90, value=45, orientation='horizontal')
-        self.root.add_widget(slider)
-        armbutton = Button(text='Arm')
+
+        # slider = Slider(min=0, max=90, value=45, orientation='horizontal')
+        # self.root.add_widget(slider)
+
+        logo = Image(source = 'qlogo.png')
+        self.root.add_widget(logo)
+
+        armbutton = Button(text='Connect')
+        armbutton.bind(on_press = self.connect_callback)
         self.root.add_widget(armbutton)
-        # self.root.add_widget(Button(text='Arm'))
-        self.root.add_widget(Button(text='Take Off'))
-        self.root.add_widget(Button(text='Land'))
+
+        takeoffbutton = Button(text='Arm and Take Off')
+        takeoffbutton.bind(on_press = self.arm_and_takeoff_callback)
+        self.root.add_widget(takeoffbutton)
+        # self.root.add_widget(Button(text='Take Off'))
+
+        landbutton = Button(text='Land')
+        landbutton.bind(on_press = self.land_callback)
+        self.root.add_widget(landbutton)
+        # self.root.add_widget(Button(text='Land'))
+
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
-        joystick1 = Joystick()
-        joystick2 = Joystick()
-        joystick1.bind(pad=self.update_coordinates)
-        self.root.add_widget(joystick1)
+        throttle_joystick = Joystick()
+        movement_joystick = Joystick()
+        throttle_joystick.bind(pad=self.simple_update_throttle_stick)
+        self.root.add_widget(throttle_joystick)
         self.label1 = Label()
         self.root.add_widget(self.label1)
         self.label2 = Label()
         self.root.add_widget(self.label2)
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
-        joystick2.bind(pad=self.update_coordinates)
-        self.root.add_widget(joystick2)
+        movement_joystick.bind(pad=self.update_movement_stick)
+        self.root.add_widget(movement_joystick)
+
+
+    def update_movement_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        self.label1.text = text.format(x, y, radians, magnitude, angle)
+        pitch_level = np.sin(joystick.angle)*joystick.magnitude
+        roll_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_pitch(vehicle,pitch_level)
+        rc_roll(vehicle,roll_level)
+
+
+    def update_throttle_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        # self.label1.text = text.format(x, y, radians, magnitude, angle)
+        throttle_level = np.sin(joystick.angle)*joystick.magnitude
+        yaw_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_throttle(vehicle,throttle_level)
+        rc_yaw(vehicle,yaw_level)
+
+
+    def simple_update_throttle_stick(self, joystick, pad, vehicle):
+        x = str(pad[0])[0:5]
+        y = str(pad[1])[0:5]
+        radians = str(joystick.radians)[0:5]
+        magnitude = str(joystick.magnitude)[0:5]
+        angle = str(joystick.angle)[0:5]
+        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        # self.label1.text = text.format(x, y, radians, magnitude, angle)
+        throttle_level = np.sin(joystick.angle)*joystick.magnitude
+        # yaw_level = np.cos(joystick.angle)*joystick.magnitude
+        rc_throttle(vehicle,throttle_level)
+        # rc_yaw(vehicle,yaw_level)
+
+    def map2pwm(x):
+        maxpwm = 1900
+        minpwm = 1100
+        return int( (x - -1) * (maxpwm - minpwm) / (1 - -1) + minpwm)
+
+    def rc_roll(vehicle,rollval):
+        # Input a roll value from -1 to 1
+        roll = map2pwm(rollval)
+        vehicle.channels.overrides[1] = roll
+
+    def rc_pitch(vehicle,pitchval):
+        # Input a roll value from -1 to 1
+        pitch = map2pwm(pitchval)
+        vehicle.channels.overrides[2] = pitch
+
+    def rc_throttle(vehicle,throttleval):
+        # Input a roll value from -1 to 1
+        throttle = map2pwm(throttleval)
+        vehicle.channels.overrides[3] = throttle
+
+    def rc_yaw(vehicle,yawval):
+        # Input a roll value from -1 to 1
+        yaw = map2pwm(yawval)
+        vehicle.channels.overrides[4] = yaw
+
+    def connect_callback(self,event):
+        print('Connect button pressed')
+
+        print('Connecting...')
+        vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
+
+        vehicle.parameters['ARMING_CHECK']=0
+
+        #-- Read information from the autopilot:
+        #- Version and attributes
+        vehicle.wait_ready(True, timeout=300)
+        print('Autopilot version: %s' % vehicle.version)
+
+        #- Read the attitude: roll, pitch, yaw
+        print('Attitude: %s' % vehicle.attitude)
+
+        #- When did we receive the last heartbeat
+        print('Last Heartbeat: %s' % vehicle.last_heartbeat)
+
+
+    def arm_and_takeoff_callback(self, event):
+        # Take off in STABILIZE and reach a desired alt, then leave throttle on idle
+        while not vehicle.is_armable:
+            print("waiting to be armable")
+            time.sleep(1)
+
+            # Set vehicle mode
+        desired_mode = 'STABILIZE'
+        while vehicle.mode != desired_mode:
+            vehicle.mode = dronekit.VehicleMode(desired_mode)
+            time.sleep(0.5)
+
+        while not vehicle.armed:
+            print("Arming motors")
+            vehicle.armed = True
+            time.sleep(0.5)
+
+        # First check to see if the vehicle is actuallly armed:
+        if vehicle.armed == True:
+
+            vehicle.mode = VehicleMode("ALT_HOLD")
+            #desired_alt = 10 # meters
+            # desired_alt = input("Enter a desired altitude (m): ")
+            initial_alt = vehicle.location.global_relative_frame.alt
+            climb_throttle = 0.75
+            idle_throttle = 0.45
+            print("Taking off to desired altitude: %s" % desired_alt)
+            try:
+                while (vehicle.location.global_relative_frame.alt <= desired_alt):
+                    print("Vehicle Altitude: %s" % vehicle.location.global_relative_frame.alt)
+                    vehicle.channels.overrides[3] = map2pwm(climb_throttle)
+                print('ALTITUDE ACHIEVED. Going to idle throttle.')
+                vehicle.channels.overrides[3] = map2pwm(idle_throttle) # Idle throttle
+                print("Takeoff Complete")
+            except KeyboardInterrupt:
+                print('Takeoff failed...Turning off motors...')
+                vehicle.channels.overrides[3] = []
+                vehicle.close()
+
+        else:
+            print("Please Arm the vehicle and try again")
+
+
+    def land_callback(self, event):
+        if vehicle.armed == True:
+            vehicle.mode = VehicleMode('LAND')
+        else:
+            print('Can''t land if you''re not in the air')
+
+    # callback function tells when arm button is pressed and executes arming action
+    def arm_callback(self, event):
+        print("Arm button pressed")
+
+        while not vehicle.is_armable:
+            print("waiting to be armable")
+            time.sleep(1)
+
+        # Set vehicle mode
+        desired_mode = 'STABILIZE'
+        while vehicle.mode != desired_mode:
+            vehicle.mode = dronekit.VehicleMode(desired_mode)
+            time.sleep(0.5)
+
+        while not vehicle.armed:
+            print("Arming motors")
+            vehicle.armed = True
+            time.sleep(0.5)
 
 
     def update_coordinates(self, joystick, pad):
