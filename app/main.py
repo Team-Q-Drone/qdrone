@@ -41,6 +41,42 @@ from kivy.uix.image import Image
 OUTLINE_ZERO = 0.00000000001
 # replaces user's 0 value for outlines, avoids invalid width exception
 
+def map2pwm(x):
+    global vehicle
+    maxpwm = 2006
+    minpwm = 982
+    return int( (x - -1) * (maxpwm - minpwm) / (1 - -1) + minpwm)
+
+def command_drone(vehicle,rollval,pitchval,throttleval,yawval):
+    roll = map2pwm(rollval)
+    vehicle.channels.overrides[1] = roll
+    pitch = map2pwm(pitchval)
+    vehicle.channels.overrides[2] = pitch
+    throttle = map2pwm(throttleval)
+    vehicle.channels.overrides[3] = throttle
+    yaw = map2pwm(yawval)
+    vehicle.channels.overrides[4] = yaw
+
+def rc_roll(vehicle,rollval):
+    # Input a roll value from -1 to 1
+    roll = map2pwm(rollval)
+    vehicle.channels.overrides[1] = roll
+
+def rc_pitch(vehicle,pitchval):
+    # Input a roll value from -1 to 1
+    pitch = map2pwm(pitchval)
+    vehicle.channels.overrides[2] = pitch
+
+def rc_throttle(vehicle,throttleval):
+    # Input a roll value from -1 to 1
+    throttle = map2pwm(throttleval)
+    vehicle.channels.overrides[3] = throttle
+
+def rc_yaw(vehicle,yawval):
+    # Input a roll value from -1 to 1
+    yaw = map2pwm(yawval)
+    vehicle.channels.overrides[4] = yaw
+
 #==================== Classes that don't take kivy inputs ======================
 class TouchData:
     x_distance = None
@@ -127,7 +163,7 @@ class Joystick(Widget):
        Outline widths are defined by percentage,
            1.0 being 100%, of the total widget size.'''
 
-    sticky = BooleanProperty(True)
+    sticky = BooleanProperty(False)
     '''When False, the joystick will snap back to center on_touch_up.
        When True, the joystick will maintain its final position
            at the time of on_touch_up.'''
@@ -318,13 +354,23 @@ class Joystick(Widget):
         return 'joystick' in touch.ud and touch.ud['joystick'] == self
 
 
+
+
+
+
+
+
 class TestApp(App):
     def build(self):
         # return Joystick()
         self.root = GridLayout(cols=4)
         self.root.padding = 50
 
-        slider = Slider(min=0, max=90, value=45, orientation='horizontal')
+        # with self.canvas:
+        #     Rectangle(source='background.jpeg', pos=self.pos, size=self.size)
+
+        slider = Slider(min=-1, max=1, value=-1, step=0.05, orientation='vertical')
+        slider.fbind('value', self.on_slider_val)
         self.root.add_widget(slider)
 
         # logo = Image(source = 'qlogo.png')
@@ -338,12 +384,9 @@ class TestApp(App):
         armbutton.bind(on_press = self.arm_callback)
         self.root.add_widget(armbutton)
 
-
-
         # takeoffbutton = Button(text='Arm and Take Off')
         # takeoffbutton.bind(on_press = self.arm_and_takeoff_callback)
         # self.root.add_widget(takeoffbutton)
-
 
         landbutton = Button(text='Land')
         landbutton.bind(on_press = self.land_callback)
@@ -353,7 +396,8 @@ class TestApp(App):
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         throttle_joystick = Joystick()
         movement_joystick = Joystick()
-        throttle_joystick.bind(pad=self.simple_update_throttle_stick)
+        throttle_joystick.bind(pad=self.throttle_stabilize)
+        # throttle_joystick.bind(pad=self.simple_update_throttle_stick)
         self.root.add_widget(throttle_joystick)
         self.label1 = Label()
         self.root.add_widget(self.label1)
@@ -364,76 +408,71 @@ class TestApp(App):
         self.root.add_widget(movement_joystick)
 
 
-    def update_movement_stick(self, joystick, pad, vehicle):
-        x = str(pad[0])[0:5]
-        y = str(pad[1])[0:5]
-        radians = str(joystick.radians)[0:5]
-        magnitude = str(joystick.magnitude)[0:5]
-        angle = str(joystick.angle)[0:5]
-        text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
-        self.label1.text = text.format(x, y, radians, magnitude, angle)
-        pitch_level = np.sin(joystick.angle)*joystick.magnitude
-        roll_level = np.cos(joystick.angle)*joystick.magnitude
-        rc_pitch(vehicle,pitch_level)
-        rc_roll(vehicle,roll_level)
 
 
-    def update_throttle_stick(self, joystick, pad, vehicle):
-        x = str(pad[0])[0:5]
-        y = str(pad[1])[0:5]
-        radians = str(joystick.radians)[0:5]
-        magnitude = str(joystick.magnitude)[0:5]
-        angle = str(joystick.angle)[0:5]
-        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
-        # self.label1.text = text.format(x, y, radians, magnitude, angle)
-        throttle_level = np.sin(joystick.angle)*joystick.magnitude
-        yaw_level = np.cos(joystick.angle)*joystick.magnitude
-        rc_throttle(vehicle,throttle_level)
-        rc_yaw(vehicle,yaw_level)
 
+    def on_slider_val(self, instance, val):
+        # global vehicle
 
-    def simple_update_throttle_stick(self, joystick, pad, vehicle):
-        x = str(pad[0])[0:5]
-        y = str(pad[1])[0:5]
-        radians = str(joystick.radians)[0:5]
-        magnitude = str(joystick.magnitude)[0:5]
-        angle = str(joystick.angle)[0:5]
-        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
-        # self.label1.text = text.format(x, y, radians, magnitude, angle)
-        throttle_level = np.sin(joystick.angle)*joystick.magnitude
-        # yaw_level = np.cos(joystick.angle)*joystick.magnitude
-        rc_throttle(vehicle,throttle_level)
-        # rc_yaw(vehicle,yaw_level)
-
-    def map2pwm(x):
-        maxpwm = 1900
-        minpwm = 1100
-        return int( (x - -1) * (maxpwm - minpwm) / (1 - -1) + minpwm)
-
-    def rc_roll(vehicle,rollval):
-        # Input a roll value from -1 to 1
-        roll = map2pwm(rollval)
-        vehicle.channels.overrides[1] = roll
-
-    def rc_pitch(vehicle,pitchval):
-        # Input a roll value from -1 to 1
-        pitch = map2pwm(pitchval)
-        vehicle.channels.overrides[2] = pitch
-
-    def rc_throttle(vehicle,throttleval):
-        # Input a roll value from -1 to 1
-        throttle = map2pwm(throttleval)
+        throttle = map2pwm(val)
+        self.label1.text = str(throttle)
         vehicle.channels.overrides[3] = throttle
 
-    def rc_yaw(vehicle,yawval):
-        # Input a roll value from -1 to 1
-        yaw = map2pwm(yawval)
-        vehicle.channels.overrides[4] = yaw
 
-    def connect_callback(self,event):
-        print('Connect button pressed')
+    def update_movement_stick(self, joystick, pad):
+        global vehicle
+        x = pad[0]
+        y = pad[1]
+        # radians = str(joystick.radians)[0:5]
+        # magnitude = str(joystick.magnitude)[0:5]
+        # angle = str(joystick.angle)[0:5]
+        # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+        # self.label1.text = text.format(x, y, radians, magnitude, angle)
+        pitch_level = y
+        roll_level = x
+        self.label1.text = str(roll_level)
+        # rc_pitch(vehicle,pitch_level)
+        # rc_roll(vehicle,roll_level)
 
-        print('Connecting...')
+
+    # def update_throttle_stick(self, joystick, pad):
+    #     global vehicle
+    #     x = str(pad[0])[0:5]
+    #     y = str(pad[1])[0:5]
+    #     radians = str(joystick.radians)[0:5]
+    #     magnitude = str(joystick.magnitude)[0:5]
+    #     angle = str(joystick.angle)[0:5]
+    #     # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+    #     # self.label1.text = text.format(x, y, radians, magnitude, angle)
+    #     throttle_level = np.sin(joystick.angle)*joystick.magnitude
+    #     yaw_level = np.cos(joystick.angle)*joystick.magnitude
+    #     rc_throttle(vehicle,throttle_level)
+    #     rc_yaw(vehicle,yaw_level)
+
+
+    # def simple_update_throttle_stick(self, joystick, pad): # PROBABLY NEEDS TO BE A GLOBAL FUNCTION
+    #     global vehicle
+    #     x = str(pad[0])[0:5]
+    #     y = str(pad[1])[0:5]
+    #     radians = str(joystick.radians)[0:5]
+    #     magnitude = str(joystick.magnitude)[0:5]
+    #     angle = str(joystick.angle)[0:5]
+    #     # text = "x: {}\ny: {}\nradians: {}\nmagnitude: {}\nangle: {}"
+    #     # self.label1.text = text.format(x, y, radians, magnitude, angle)
+    #     throttle_level = np.sin(joystick.angle)*joystick.magnitude
+    #
+    #     # rc_throttle(vehicle,throttle_level)
+
+
+
+
+    def connect_callback(self, event):
+        global vehicle
+        self.label1.text = 'Connect button pressed'
+        # print('Connect button pressed')
+
+        self.label1.text = 'Connecting...'
+        # print('Connecting...')
         vehicle = connect('0.0.0.0:14550', wait_ready=False, baud=115200)
 
         vehicle.parameters['ARMING_CHECK']=0
@@ -444,63 +483,79 @@ class TestApp(App):
         print('Autopilot version: %s' % vehicle.version)
 
         #- Read the attitude: roll, pitch, yaw
-        print('Attitude: %s' % vehicle.attitude)
+        for i in range(1,20):
+            # self.label1.text = ''
+            print('Attitude: %s' % vehicle.attitude)
+            time.sleep(0.25)
+
 
         #- When did we receive the last heartbeat
         print('Last Heartbeat: %s' % vehicle.last_heartbeat)
 
+        return vehicle
 
-    def arm_and_takeoff_callback(self, event):
-        # Take off in STABILIZE and reach a desired alt, then leave throttle on idle
-        while not vehicle.is_armable:
-            print("waiting to be armable")
-            time.sleep(1)
-
-            # Set vehicle mode
-        desired_mode = 'STABILIZE'
-        while vehicle.mode != desired_mode:
-            vehicle.mode = dronekit.VehicleMode(desired_mode)
-            time.sleep(0.5)
-
-        while not vehicle.armed:
-            print("Arming motors")
-            vehicle.armed = True
-            time.sleep(0.5)
-
-        # First check to see if the vehicle is actuallly armed:
-        if vehicle.armed == True:
-
-            vehicle.mode = VehicleMode("ALT_HOLD")
-            #desired_alt = 10 # meters
-            # desired_alt = input("Enter a desired altitude (m): ")
-            initial_alt = vehicle.location.global_relative_frame.alt
-            climb_throttle = 0.75
-            idle_throttle = 0.45
-            print("Taking off to desired altitude: %s" % desired_alt)
-            try:
-                while (vehicle.location.global_relative_frame.alt <= desired_alt):
-                    print("Vehicle Altitude: %s" % vehicle.location.global_relative_frame.alt)
-                    vehicle.channels.overrides[3] = map2pwm(climb_throttle)
-                print('ALTITUDE ACHIEVED. Going to idle throttle.')
-                vehicle.channels.overrides[3] = map2pwm(idle_throttle) # Idle throttle
-                print("Takeoff Complete")
-            except KeyboardInterrupt:
-                print('Takeoff failed...Turning off motors...')
-                vehicle.channels.overrides[3] = []
-                vehicle.close()
-
-        else:
-            print("Please Arm the vehicle and try again")
+    # def arm_and_takeoff_callback(self, event):
+    #     global vehicle
+    #     # Take off in STABILIZE and reach a desired alt, then leave throttle on idle
+    #     while not vehicle.is_armable:
+    #         print("waiting to be armable")
+    #         time.sleep(1)
+    #
+    #         # Set vehicle mode
+    #     desired_mode = 'STABILIZE'
+    #     while vehicle.mode != desired_mode:
+    #         vehicle.mode = dronekit.VehicleMode(desired_mode)
+    #         time.sleep(0.5)
+    #
+    #     while not vehicle.armed:
+    #         print("Arming motors")
+    #         vehicle.armed = True
+    #         time.sleep(0.5)
+    #
+    #     # First check to see if the vehicle is actuallly armed:
+    #     if vehicle.armed == True:
+    #
+    #         vehicle.mode = VehicleMode("STABILIZE")
+    #         #desired_alt = 10 # meters
+    #         # desired_alt = input("Enter a desired altitude (m): ")
+    #         initial_alt = vehicle.location.global_relative_frame.alt
+    #         climb_throttle = 0.75
+    #         idle_throttle = 0.45
+    #         print("Taking off to desired altitude: %s" % desired_alt)
+    #         try:
+    #             while (vehicle.location.global_relative_frame.alt <= desired_alt):
+    #                 print("Vehicle Altitude: %s" % vehicle.location.global_relative_frame.alt)
+    #                 vehicle.channels.overrides[3] = map2pwm(climb_throttle)
+    #             print('ALTITUDE ACHIEVED. Going to idle throttle.')
+    #             vehicle.channels.overrides[3] = map2pwm(idle_throttle) # Idle throttle
+    #             print("Takeoff Complete")
+    #         except KeyboardInterrupt:
+    #             print('Takeoff failed...Turning off motors...')
+    #             vehicle.channels.overrides[3] = []
+    #             vehicle.close()
+    #
+    #     else:
+    #         print("Please Arm the vehicle and try again")
 
 
     def land_callback(self, event):
-        if vehicle.armed == True:
-            vehicle.mode = VehicleMode('LAND')
-        else:
-            print('Can''t land if you''re not in the air')
+        # global vehicle
+        # if vehicle.armed == True:
+        #     vehicle.mode = VehicleMode('LAND')
+        # else:
+        #     print('Can''t land if you''re not in the air')
+
+        # Testing flight loop
+        try:
+            while True:
+                fly_stabilize()
+
+        except KeyboardInterrupt:
+            print('Exiting')
 
     # callback function tells when arm button is pressed and executes arming action
     def arm_callback(self, event):
+        global vehicle
         print("Arm button pressed")
 
         while not vehicle.is_armable:
@@ -517,6 +572,51 @@ class TestApp(App):
             print("Arming motors")
             vehicle.armed = True
             time.sleep(0.5)
+
+        # event = Clock.schedule_interval(throttle_stabilize, 1 / 30.)
+
+    def throttle_stabilize(self, joystick, pad):
+        global vehicle
+
+        x = pad[0]
+        y = pad[1]
+
+        # if np.abs(y) <= 0.1:
+        #     throttleval = 0.0
+        # else:
+        #     throttleval = y
+        throttleval = y
+
+        # Translate to pwm value
+        throttlepwm = map2pwm(throttleval)
+
+        self.label1.text = str(throttleval)
+        self.label2.text = str(throttlepwm)
+
+        # Send rc_throttle command_drone
+        rc_throttle(vehicle, throttleval)
+
+
+    def move_stabilize(self, joystick, pad):
+        global vehicle
+
+        x = pad[0]
+        y = pad[1]
+
+        # if np.abs(y) <= 0.1:
+        #     throttleval = 0.0
+        # else:
+        #     throttleval = y
+        pitchval = x
+        rollval = y
+
+        self.label1.text = str(pitchval)
+        self.label2.text = str(rollval)
+
+        # Send rc_throttle command_drone
+        rc_pitch(vehicle, pitchval)
+        rc_roll(vehicle, rollval)
+
 
 
     def update_coordinates(self, joystick, pad):
