@@ -388,10 +388,14 @@ class TestApp(App):
         # takeoffbutton.bind(on_press = self.arm_and_takeoff_callback)
         # self.root.add_widget(takeoffbutton)
 
-        landbutton = Button(text='Land')
-        landbutton.bind(on_press = self.land_callback)
-        self.root.add_widget(landbutton)
-        # self.root.add_widget(Button(text='Land'))
+        # landbutton = Button(text='Land')
+        # landbutton.bind(on_press = self.land_callback)
+        # self.root.add_widget(landbutton)
+
+        killbutton = Button(text='Kill Motors')
+        killbutton.bind(on_press = self.kill_motors)
+        self.root.add_widget(killbutton)
+
 
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
         throttle_joystick = Joystick()
@@ -404,7 +408,7 @@ class TestApp(App):
         self.label2 = Label()
         self.root.add_widget(self.label2)
         # self.root.add_widget(BoxLayout(orientation='horizontal'))
-        movement_joystick.bind(pad=self.update_movement_stick)
+        movement_joystick.bind(pad=self.move_stabilize)
         self.root.add_widget(movement_joystick)
 
 
@@ -573,7 +577,16 @@ class TestApp(App):
             vehicle.armed = True
             time.sleep(0.5)
 
-        # event = Clock.schedule_interval(throttle_stabilize, 1 / 30.)
+
+    def kill_motors(self, event):
+        global vehicle
+
+        timeout = 0.5
+        timeout_start = time.time()
+        while time.time() < timeout_start + timeout:
+            # rc_throttle(vehicle,0.0) # KILL THE MOTORS!
+            self.label2.text = 'KILLING MOTORS'
+        # self.label2.text = ''
 
     def throttle_stabilize(self, joystick, pad):
         global vehicle
@@ -594,7 +607,7 @@ class TestApp(App):
         self.label2.text = str(throttlepwm)
 
         # Send rc_throttle command_drone
-        rc_throttle(vehicle, throttleval)
+        # rc_throttle(vehicle, throttleval)
 
 
     def move_stabilize(self, joystick, pad):
@@ -613,9 +626,10 @@ class TestApp(App):
         self.label1.text = str(pitchval)
         self.label2.text = str(rollval)
 
-        # Send rc_throttle command_drone
-        rc_pitch(vehicle, pitchval)
-        rc_roll(vehicle, rollval)
+        # # Send rc_throttle command_drone
+        # rc_pitch(vehicle, pitchval)
+        # rc_roll(vehicle, rollval)
+
 
 
 
