@@ -607,7 +607,7 @@ class TestApp(App):
         self.label2.text = str(throttlepwm)
 
         # Send rc_throttle command_drone
-        # rc_throttle(vehicle, throttleval)
+        rc_throttle(vehicle, throttleval)
 
 
     def move_stabilize(self, joystick, pad):
@@ -627,8 +627,8 @@ class TestApp(App):
         self.label2.text = str(rollval)
 
         # # Send rc_throttle command_drone
-        # rc_pitch(vehicle, pitchval)
-        # rc_roll(vehicle, rollval)
+        rc_pitch(vehicle, pitchval)
+        rc_roll(vehicle, rollval)
 
 
 
